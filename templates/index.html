@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAR TAR UNIVERSE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            background: #1e1e1e;
+        }
+
+        /* Header */
+        #header {
+            font-size: 2em;
+            color: #00B0FF;
+            text-align: center;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Messages Container */
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: calc(100vh - 200px); /* Ensure it doesn't overlap with the input area */
+            overflow-y: scroll; /* Allow scrolling for old messages */
+            padding-left: 10px;
+        }
+
+        .message {
+            background-color: #333;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            max-width: 80%;
+            font-size: 1.1em;
+            word-wrap: break-word;
+            display: flex;
+            align-items: center;
+        }
+
+        .message img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+
+        .my-message {
+            background-color: #444;
+            align-self: flex-end;
+        }
+
+        .message span {
+            font-size: 0.9em;
+            color: #00B0FF;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            font-size: 1.2em;
+            color: #888;
+            font-style: italic;
+            display: none;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Message Input Area */
+        #message-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            margin-top: 10px;
+            font-size: 1.2em;
+            background-color: #222;
+            color: #fff;
+            box-sizing: border-box;
+            resize: none;
+            border: none;
+            outline: none;
+            min-height: 50px;
+        }
+
+        /* Send Button */
+        #send-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            margin-top: 10px;
+            background-color: #00796b;
+            color: #fff;
+            font-size: 1.2em;
+            cursor: pointer;
+            box-sizing: border-box;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #send-btn:hover {
+            background-color: #004d40;
+        }
+
+        /* Emoji Button and Picker */
+        .emoji-btn {
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 10px;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            color: #00B0FF;
+            transition: 0.3s;
+            position: absolute;
+            bottom: 15px;
+            right: 70px;
+        }
+
+        .emoji-btn:hover {
+            background-color: #00B0FF;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        /* Emoji Picker */
+        .emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 60px;
+            background-color: #333;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.7);
+            width: 250px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .emoji {
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .emoji:hover {
+            background-color: #00B0FF;
+            border-radius: 5px;
+            color: #fff;
+        }
+
+        /* Scroll Effect */
+        .emoji-picker::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .emoji-picker::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 4px;
+        }
+
+        .emoji-picker::-webkit-scrollbar-thumb:hover {
+            background-color: #888;
+        }
+
+        /* User Prompt */
+        #user-prompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            color: #00B0FF;
+        }
+
+        #user-prompt button {
+            background-color: #00796b;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            border-radius: 8px;
+        }
+
+        #user-prompt button:hover {
+            background-color: #004d40;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- User Prompt -->
+    <div id="user-prompt">
+        <h2>Who are you?</h2>
+        <button onclick="chooseUser('Adisi')">Adisi</button>
+        <button onclick="chooseUser('Kishan')">Kishan</button>
+    </div>
+
+    <div id="chat-container" style="display:none;">
+        <div id="header">TAR TAR Universe</div>
+        <div id="messages"></div>
+        <div class="typing-indicator" id="typing-indicator"> Some TAR TAR is coming ....typing...</div>
+
+        <!-- Message Input Area -->
+        <textarea id="message-input" placeholder="Type a message..."></textarea>
+
+        <!-- Emoji Button -->
+        <button class="emoji-btn" onclick="toggleEmojiPicker()">🐸</button>
+
+        <!-- Emoji Picker -->
+        <div id="emoji-picker" class="emoji-picker">
+            <span class="emoji" onclick="sendEmoji('🐸')">😊</span>
+            <span class="emoji" onclick="sendEmoji('😂🐸)">😂</span>
+            <span class="emoji" onclick="sendEmoji('❤️')">❤️</span>
+            <span class="emoji" onclick="sendEmoji('👍')">👍</span>
+            <span class="emoji" onclick="sendEmoji('😢')">😢</span>
+            <span class="emoji" onclick="sendEmoji('🎉')">🎉</span>
+            <span class="emoji" onclick="sendEmoji('🔥')">🔥</span>
+            <span class="emoji" onclick="sendEmoji('😎')">😎</span>
+        </div>
+
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
+    <script>
+        let user = '';
+        const socket = io.connect('https://pahadi.tech/');
+        const messagesContainer = document.getElementById('messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const messageInput = document.getElementById('message-input');
+        const emojiPicker = document.getElementById('emoji-picker');
+
+        // Function to select user
+        function chooseUser(selectedUser) {
+            user = selectedUser;
+            document.getElementById('user-prompt').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'block';
+        }
+
+        // Send message when 'Enter' is pressed
+        messageInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message !== '') {
+                const timestamp = new Date().toLocaleTimeString();
+                socket.emit('send_message', {
+                    user: user,
+                    message: message,
+                    timestamp: timestamp
+                });
+                messageInput.value = ''; // Clear input
+            }
+        }
+
+        socket.on('new_message', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (data.user === 'Kishan') {
+                messageDiv.classList.add('my-message');
+                messageDiv.innerHTML = `<img src="https://i.ibb.co/fG9mn9Z/Kishan.jpg" alt="Kishan">${data.message} <span>${data.timestamp}</span>`;
+            } else {
+                messageDiv.innerHTML = `<img src="https://i.ibb.co/rdcpbkQ/adisi.jpg" alt="Adisi">${data.message} <span>${data.timestamp}</span>`;
+            }
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        });
+
+        socket.on('user_typing', (data) => {
+            if (data.user !== user) {
+                typingIndicator.style.display = 'block';
+            }
+        });
+
+        socket.on('stop_typing', (data) => {
+            if (data.user !== user) {
+                typingIndicator.style.display = 'none';
+            }
+        });
+
+        function toggleEmojiPicker() {
+            emojiPicker.style.display = emojiPicker.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function sendEmoji(emoji) {
+            messageInput.value += emoji;
+            emojiPicker.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
